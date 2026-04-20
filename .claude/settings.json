@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(gh search *)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "Edit(/.claude/skills/pause/**)",
+      "Bash(chmod +x \"c:/Users/Nebula PC/Documents/meganli_Git/claude-pause/.claude/hooks/pre-push.sh\")",
+      "Bash(bash -n \"c:/Users/Nebula PC/Documents/meganli_Git/claude-pause/.claude/hooks/pre-push.sh\")",
+      "Bash(git add *)",
+      "Bash(bash -n .claude/hooks/pre-push.sh)",
+      "Bash(git commit -m ' *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Nebula PC\\Documents\\meganli_Git\\claude-pause\\.claude\\skills\\pause"
+    ]
+  }
+}
