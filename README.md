@@ -102,7 +102,7 @@ chmod +x ~/.claude/hooks/pre-push.sh
 # Merge the `hooks` block from /tmp/claude-think-twice/.claude/settings.json into ~/.claude/settings.json
 ```
 
-Restart Claude Code (or reload the window) and type `/think-twice` to confirm it loaded.
+> **Important — restart Claude Code after install.** The skill will hot-reload when you drop the file in, but the **hook registers only at session start**. Until you restart (or open a fresh window), `git push` will NOT trigger the pre-push beat. To verify both installed correctly: restart → type `/think-twice` (should list the three beats) → ask Claude to run `git push` (should surface the ask dialog with the scan matrix).
 
 ---
 
