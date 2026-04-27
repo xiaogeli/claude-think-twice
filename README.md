@@ -1,10 +1,6 @@
 # claude-think-twice
 
-[English](#english) · [简体中文](#中文)
-
----
-
-<a id="english"></a>
+*🌐 [简体中文版](#简体中文) — collapsed at the bottom of this file.*
 
 > **Fast ≠ efficient.**
 > *The missing beat between "I see the fix" and `git push`.*
@@ -255,11 +251,12 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-[↑ Back to top](#claude-think-twice) · [English](#english) · [简体中文](#中文)
+<a id="简体中文"></a>
 
----
+<details>
+<summary><strong>📖 简体中文版（点击展开）</strong></summary>
 
-<a id="中文"></a>
+<br>
 
 > **快 ≠ 高效。**
 > *"我看见修法了" 和 `git push` 之间缺的那一拍。*
@@ -508,6 +505,4 @@ Harness 通过 `source pre-push.sh` 把两个纯函数拉出来单独跑 —— 
 
 MIT —— 见 [LICENSE](LICENSE)。
 
----
-
-[↑ 回到顶部](#claude-think-twice) · [English](#english) · [简体中文](#中文)
+</details>
