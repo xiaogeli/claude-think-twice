@@ -129,7 +129,6 @@ Lives in `.claude/settings.json`:
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "if": "Bash(git push*)",
         "hooks": [
           { "type": "command", "command": "./.claude/hooks/pre-push.sh" }
         ]
@@ -139,7 +138,9 @@ Lives in `.claude/settings.json`:
 }
 ```
 
-The hook fires whenever the agent tries to run `git push *`. It computes the diff against the upstream branch, matches changed files against the scan matrix, and returns an `ask` decision with the matrix as the reason. Claude Code surfaces the prompt to **you, the human** — and that prompt is the actual beat of reflection. You then either allow, deny, or tell the agent to run `/think-twice` first.
+The matcher fires on **every** Bash call, and the script itself filters down to `git push*` via `should_handle_command` — exiting silently with code 0 for anything else. Claude Code's hook `matcher` only matches on tool name (e.g. `Bash`), not on tool input content, so the filter has to live in the script. If you ever need to trigger on a different command, edit `should_handle_command` in `.claude/hooks/pre-push.sh`.
+
+When `git push` is detected, the hook computes the diff against the upstream branch, matches changed files against the scan matrix, and returns an `ask` decision with the matrix as the reason. Claude Code surfaces the prompt to **you, the human** — and that prompt is the actual beat of reflection. You then either allow, deny, or tell the agent to run `/think-twice` first.
 
 The hook does **not** try to parse "did the agent run scans?" from session history — that's unreliable. The enforcement is the human-in-the-loop moment, not a state machine.
 
@@ -195,9 +196,9 @@ The `PreToolUse` hook is Claude Code-only — other agents would need their own 
 tests/run.sh
 ```
 
-16 cases covering every extension currently in the scan matrix (`*.sh` / `*.py` / `*.ts` / `*.tsx` / `*.js` / `*.jsx` / `*.css` / `*.scss` / `*.sql` / `*.json` / `*.yaml` / `*.yml` / `*.toml`), the unknown-extension fallback, and path-prefix preservation. Exit code is the number of failures, so it drops cleanly into CI.
+27 cases. 11 cover `should_handle_command` (the command-content filter — fires on `git push*`, stays silent on `ls`, `git status`, `git push-tags`, etc.) and 16 cover `classify_file` (every extension in the scan matrix plus the unknown-extension fallback and path-prefix preservation). Exit code is the number of failures, so it drops cleanly into CI.
 
-The harness sources `pre-push.sh` and exercises the `classify_file` function in isolation — git-diff and Claude-Code-payload integration are intentionally out of scope (slow + brittle). Adding a new scan-matrix row should come with a matching test row in [`tests/run.sh`](./tests/run.sh) so future PRs can't silently break the classifier.
+The harness sources `pre-push.sh` and exercises the two pure functions in isolation — git-diff and Claude-Code-payload integration are intentionally out of scope (slow + brittle). Adding a new scan-matrix row, or broadening the command trigger, should come with matching test rows in [`tests/run.sh`](./tests/run.sh) so future PRs can't silently break either gate.
 
 ---
 

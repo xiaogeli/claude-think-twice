@@ -14,6 +14,22 @@
 # the whole pipeline and only fires when the script is executed directly,
 # not sourced.
 
+# Decide whether a Bash command should trigger the think-twice prompt.
+# Returns 0 (yes, handle) only for `git push` and `git push <args...>`. We
+# filter inside the script because Claude Code's PreToolUse `matcher` field
+# matches on tool name only — it can't filter by command content. The hook is
+# wired with matcher="Bash", so it fires on every Bash call; this function is
+# the gate that keeps it silent for `ls`, `grep`, `cat`, etc.
+should_handle_command() {
+  local cmd="$1"
+  # Trim leading whitespace so " git push" still matches.
+  cmd="${cmd#"${cmd%%[![:space:]]*}"}"
+  case "$cmd" in
+    "git push"|"git push "*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # Classify a single changed-file path into a scan-matrix line.
 # Pure: takes a filename, prints one line, no I/O. Keep this in sync with
 # .claude/skills/think-twice/SKILL.md so the hook reminder matches the skill.
@@ -49,8 +65,15 @@ main() {
     exit 0  # fail-open: missing dep is not the agent's fault; do not block push
   fi
 
-  local INPUT CWD FILES
+  local INPUT CWD COMMAND FILES
   INPUT="$(cat)"
+
+  # Filter on command content. The hook is wired with matcher="Bash" so it
+  # fires on every Bash call; we only act on `git push*`.
+  COMMAND="$(printf '%s' "$INPUT" | "$PY" -c 'import json,sys; print(json.load(sys.stdin).get("tool_input",{}).get("command",""))' 2>/dev/null || true)"
+  if ! should_handle_command "$COMMAND"; then
+    exit 0
+  fi
 
   CWD="$(printf '%s' "$INPUT" | "$PY" -c 'import json,sys; print(json.load(sys.stdin).get("cwd",""))' 2>/dev/null || true)"
   if [[ -z "$CWD" ]]; then CWD="$PWD"; fi

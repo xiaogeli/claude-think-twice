@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # claude-think-twice test harness.
 #
-# Sources pre-push.sh and exercises classify_file in isolation against every
-# extension the scan matrix knows about, plus the fallback case. The full
-# pipeline (stdin parsing, git diff, JSON output) is intentionally not tested
-# here — it depends on a real git repo and Claude Code's hook payload format,
-# both of which would make the harness slow and brittle. The classification
-# logic is the part that grows when contributors add scan-matrix rows, so
-# that's the part we lock in.
+# Sources pre-push.sh and exercises the two pure functions in isolation:
+#   - should_handle_command: command-content filter (only fire on git push*)
+#   - classify_file:         scan-matrix classifier per file extension
+# The full pipeline (stdin parsing, git diff, JSON output) is intentionally
+# not tested here — it depends on a real git repo and Claude Code's hook
+# payload format, both of which would make the harness slow and brittle.
+# The two pure functions are the parts that grow when contributors add
+# scan-matrix rows or extend the trigger; that's what we lock in.
 #
 # Usage: tests/run.sh
 # Exit code: number of failed cases (0 = all pass).
@@ -30,9 +31,27 @@ if ! declare -F classify_file >/dev/null; then
   exit 99
 fi
 
+if ! declare -F should_handle_command >/dev/null; then
+  echo "ERROR: should_handle_command function not exported by pre-push.sh" >&2
+  exit 99
+fi
+
 PASS=0
 FAIL=0
 FAIL_NAMES=()
+
+assert_handle() {
+  local name="$1" cmd="$2" expected="$3"  # expected = "yes" or "no"
+  if should_handle_command "$cmd"; then actual="yes"; else actual="no"; fi
+  if [ "$actual" = "$expected" ]; then
+    PASS=$((PASS + 1))
+    printf "  PASS  %s\n" "$name"
+  else
+    FAIL=$((FAIL + 1))
+    FAIL_NAMES+=("$name")
+    printf "  FAIL  %s  (cmd=%q expected=%s got=%s)\n" "$name" "$cmd" "$expected" "$actual"
+  fi
+}
 
 assert_contains() {
   local name="$1" needle="$2" haystack="$3"
@@ -50,6 +69,20 @@ assert_contains() {
 
 echo "== claude-think-twice test harness =="
 echo "  hook: $HOOK"
+echo
+
+echo "-- should_handle_command (command filter) --"
+assert_handle "bare git push"            "git push"                 "yes"
+assert_handle "git push origin main"     "git push origin main"     "yes"
+assert_handle "git push --force"         "git push --force"         "yes"
+assert_handle "git push -u origin feat"  "git push -u origin feat"  "yes"
+assert_handle "leading whitespace"       "  git push origin main"   "yes"
+assert_handle "ls"                       "ls"                       "no"
+assert_handle "git status"               "git status"               "no"
+assert_handle "git push-tags (no space)" "git push-tags"            "no"
+assert_handle "git pushed"               "git pushed"               "no"
+assert_handle "echo git push"            "echo git push"            "no"
+assert_handle "empty"                    ""                         "no"
 echo
 
 echo "-- shell --"
