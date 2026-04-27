@@ -5,6 +5,8 @@
 
 A Claude Code **skill + hook** that makes AI coding agents see the one mistake under every reactive-coding moment: the silent belief that *saving myself a round-trip* is the same as *helping the user*. It isn't. When the skipped scan would have caught something, the agent saves itself 20 seconds and costs the user two hours. The account is inverted. This project does exactly one thing — in the second before `git push`, it makes the agent read the account right-way-up.
 
+Sister project: [`claude-prove-done`](https://github.com/xiaogeli/claude-prove-done) — same shape, different beat. *think-twice* stops `--rushed` before `git push`; *prove-done* stops `--imagined` before "I'm done."
+
 ---
 
 ## The 2-minute story
@@ -42,9 +44,10 @@ Use them all — they're complementary, not competitors.
 
 - **pre-commit, husky, lefthook** run linters and tests. They check the *code*.
 - **[git-guardrails](https://github.com/mattpocock/skills/tree/main/git-guardrails-claude-code)** and similar blocklists stop `git push --force`, `git reset --hard`, and other destructive commands. They check for *malice or accidents*.
+- **[claude-prove-done](https://github.com/xiaogeli/claude-prove-done)** checks whether the agent confused **memory** with **evidence**, before *"I'm done."* It scans the agent's outgoing prose for completion claims and asks whether any tool call this turn actually touched the claim's subject. Different beat, different moment.
 - **claude-think-twice** checks whether the agent confused **fast** with **efficient**. Before your linter runs — before the push even leaves the machine — it asks the agent to look at the inverted account it was about to book. A linter can't ask an agent to read its own ledger; a skill prompt can.
 
-One line: **git-guardrails stops `--force`. claude-think-twice stops `--rushed`.**
+One line: **git-guardrails stops `--force`. prove-done stops `--imagined`. claude-think-twice stops `--rushed`.**
 
 ---
 
@@ -186,6 +189,18 @@ The `PreToolUse` hook is Claude Code-only — other agents would need their own 
 
 ---
 
+## Tests
+
+```bash
+tests/run.sh
+```
+
+16 cases covering every extension currently in the scan matrix (`*.sh` / `*.py` / `*.ts` / `*.tsx` / `*.js` / `*.jsx` / `*.css` / `*.scss` / `*.sql` / `*.json` / `*.yaml` / `*.yml` / `*.toml`), the unknown-extension fallback, and path-prefix preservation. Exit code is the number of failures, so it drops cleanly into CI.
+
+The harness sources `pre-push.sh` and exercises the `classify_file` function in isolation — git-diff and Claude-Code-payload integration are intentionally out of scope (slow + brittle). Adding a new scan-matrix row should come with a matching test row in [`tests/run.sh`](./tests/run.sh) so future PRs can't silently break the classifier.
+
+---
+
 ## Contributing
 
 The most valuable PRs add a row to the scan matrix. Minimum requirements:
@@ -193,6 +208,7 @@ The most valuable PRs add a row to the scan matrix. Minimum requirements:
 1. The change type (e.g. `Rust`, `Go`, `Dockerfile`, `Terraform`).
 2. The minimum scan command.
 3. One sentence on *why* that scan catches the common reactive-coding failure for that type.
+4. A new test row in `tests/run.sh` that locks in the new classification.
 
 Keep additions narrow and specific — a scan that catches 80% of real breakage beats a comprehensive audit nobody runs.
 
