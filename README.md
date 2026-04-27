@@ -1,5 +1,7 @@
 # claude-think-twice
 
+**English** · [简体中文](README.zh-CN.md)
+
 > **Fast ≠ efficient.**
 > *The missing beat between "I see the fix" and `git push`.*
 
