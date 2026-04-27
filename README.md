@@ -80,7 +80,28 @@ That round-trip, without the beat, would have been a red CI build and a second r
 
 ## Install
 
-### Project-local (recommended for teams)
+### One-liner (recommended)
+
+Personal scope (all your projects):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xiaogeli/claude-think-twice/main/install.sh | bash
+```
+
+Project scope (commit `.claude/` alongside this repo so the team shares it):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xiaogeli/claude-think-twice/main/install.sh | bash -s -- --project
+```
+
+The installer clones to a temp dir, copies the skill + hook into `~/.claude/` (or `./.claude/` with `--project`), merges the PreToolUse[Bash] hook entry into `settings.json` while preserving any existing hooks, and rewrites the hook command path to absolute (personal) or relative (project) so it resolves correctly. Re-running is idempotent. Source: [`install.sh`](./install.sh).
+
+> **Restart Claude Code afterwards.** The skill hot-reloads, but hooks register only at session start.
+
+### Manual install (if you'd rather see every step)
+
+<details>
+<summary>Project-local (recommended for teams)</summary>
 
 Commit `.claude/` to your repo so everyone gets the same beat:
 
@@ -94,7 +115,10 @@ chmod +x .claude/hooks/pre-push.sh
 
 Then merge the `hooks` block from `/tmp/claude-think-twice/.claude/settings.json` into your project's `.claude/settings.json`, and commit `.claude/skills/think-twice/`, `.claude/hooks/pre-push.sh`, and the updated `.claude/settings.json`.
 
-### Personal (all your projects)
+</details>
+
+<details>
+<summary>Personal (all your projects)</summary>
 
 Drop the skill and hook under `~/.claude/` instead:
 
@@ -107,7 +131,9 @@ chmod +x ~/.claude/hooks/pre-push.sh
 # Merge the `hooks` block from /tmp/claude-think-twice/.claude/settings.json into ~/.claude/settings.json
 ```
 
-> **Important — restart Claude Code after install.** The skill will hot-reload when you drop the file in, but the **hook registers only at session start**. Until you restart (or open a fresh window), `git push` will NOT trigger the pre-push beat. To verify both installed correctly: restart → type `/think-twice` (should list the three beats) → ask Claude to run `git push` (should surface the ask dialog with the scan matrix).
+</details>
+
+After **any** install method, restart Claude Code so the hook registers. Verify: restart → type `/think-twice` (should list the three beats) → ask Claude to run `git push` (should surface the ask dialog with the scan matrix).
 
 ---
 

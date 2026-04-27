@@ -80,7 +80,28 @@ Agent 在循环内部看不到这一点 —— 在循环内部，两本账看起
 
 ## 安装
 
-### 项目级（推荐团队使用）
+### 一行命令（推荐）
+
+个人级（影响你所有项目）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xiaogeli/claude-think-twice/main/install.sh | bash
+```
+
+项目级（把 `.claude/` 提交进当前仓库给团队共享）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xiaogeli/claude-think-twice/main/install.sh | bash -s -- --project
+```
+
+安装脚本会 clone 到临时目录、把 skill + hook 文件复制到 `~/.claude/`（或 `--project` 时复制到 `./.claude/`）、把 PreToolUse[Bash] hook 条目 merge 进 `settings.json`（保留你已有的所有 hook，重复的不会重复加），并根据 scope 把 hook 命令路径改写成绝对路径（个人级）或相对路径（项目级）。重复运行是幂等的。源码：[`install.sh`](./install.sh)。
+
+> **装完重启 Claude Code。** Skill 会热加载，hook 只在 session 启动时注册。
+
+### 手动安装（想看每一步的话）
+
+<details>
+<summary>项目级（推荐团队使用）</summary>
 
 把 `.claude/` 提交进仓库，团队成员共享同一拍：
 
@@ -94,7 +115,10 @@ chmod +x .claude/hooks/pre-push.sh
 
 然后把 `/tmp/claude-think-twice/.claude/settings.json` 里的 `hooks` 块 merge 进你项目的 `.claude/settings.json`，再把 `.claude/skills/think-twice/`、`.claude/hooks/pre-push.sh` 以及更新后的 `.claude/settings.json` 一起 commit。
 
-### 个人级（所有项目）
+</details>
+
+<details>
+<summary>个人级（所有项目）</summary>
 
 把 skill 和 hook 放到 `~/.claude/`：
 
@@ -107,7 +131,9 @@ chmod +x ~/.claude/hooks/pre-push.sh
 # 把 /tmp/claude-think-twice/.claude/settings.json 里的 `hooks` 块 merge 进 ~/.claude/settings.json
 ```
 
-> **重要 —— 装完重启 Claude Code。** Skill 文件丢进去会热加载，但 **hook 只在 session 启动时注册**。重启之前（或开新窗口之前），`git push` **不会**触发 pre-push 这一拍。验证装对了的方法：重启 → 输入 `/think-twice`（应该列出三拍）→ 让 Claude 跑 `git push`（应该弹出 ask 对话，里面带 scan matrix）。
+</details>
+
+不管用哪种方式装，装完都要重启 Claude Code 让 hook 注册。验证：重启 → 输入 `/think-twice`（应该列出三拍）→ 让 Claude 跑 `git push`（应该弹出 ask 对话，里面带 scan matrix）。
 
 ---
 
